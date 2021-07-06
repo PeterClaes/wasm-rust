@@ -1,0 +1,28 @@
+version: '3'
+services:
+
+  echo:
+    tty: true
+    image: paddycarey/go-echo
+    ports:
+      - '8000:8000'
+
+  httpbin:
+    tty: true
+    image: kennethreitz/httpbin
+    ports:
+      - '80:80'
+
+  wasm:
+    tty: true
+    image: istio/proxyv2:1.8.2
+    ports:
+      - '8080:8080'
+    entrypoint: ["envoy","-c","/wasm/envoycfg.yaml","-l","debug"]
+    volumes:
+      - ./envoycfg.yaml:/wasm/envoycfg.yaml
+      - ./target/wasm32-unknown-unknown/release:/wasm/release
+    working_dir: /wasm
+    depends_on: 
+      - echo
+      - httpbin

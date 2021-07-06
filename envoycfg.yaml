@@ -1,0 +1,81 @@
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 8001
+
+static_resources:
+  clusters:
+  - name: upstream
+    connect_timeout: 0.250s
+    type: LOGICAL_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: echo
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: echo
+                port_value: 8000
+  
+  - name: httpbin
+    connect_timeout: 0.250s
+    type: LOGICAL_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: httpbin
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: httpbin
+                port_value: 80
+
+  listeners:
+  - name: main
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 8080
+
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          codec_type: AUTO
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains:
+              - '*'
+              routes:
+              - match:
+                  prefix: /
+                route:
+                  cluster: upstream
+                  auto_host_rewrite: true
+          http_filters:
+          - name: envoy.filters.http.wasm
+            typed_config:
+              "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+              type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+              value:              
+                config:
+                  name: pekerustallround1
+                  root_id: pekerustallround1
+                  configuration: 
+                     "@type": type.googleapis.com/google.protobuf.StringValue
+                     value: "{\"checksvc\":\"httpbin\",\"headersEnabled\":true,\"bodyEnabled\":true,\"headers\":[\"*\"],\"body\":[\"$.\"],\"extraUrlsToMask\":\"quinten\"}"
+                  vm_config:
+                    runtime: envoy.wasm.runtime.v8
+                    code:
+                      local:
+                        filename: release/pekerustallround1.wasm
+          - name: envoy.filters.http.router

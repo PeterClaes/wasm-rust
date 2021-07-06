@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    dgp-origin: pekewashere
+    istio-injection: enabled
+  name: httpbin
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin-v1
+  namespace: httpbin
+  labels:
+    app: httpbin-v1
+    version: v1
+  annotations:
+    networking.istio.io/exportTo: "*"
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  selector:
+    app: httpbin-v1
+    version: v1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin-v1
+  namespace: httpbin
+  labels:
+    app: httpbin-v1
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin-v1
+      version: v1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        app: httpbin-v1
+        version: v1
+    spec:
+      containers:
+      - name: httpbin
+        image: kennethreitz/httpbin
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+---
+# kind: ServiceEntry
+# apiVersion: networking.istio.io/v1beta1
+# metadata:
+#   name: httpbin-v1
+#   namespace: httpbin
+# spec:
+#   hosts:
+#     - httpbin.v1
+#   ports:
+#     - name: http
+#       number: 80
+#       protocol: HTTP
+#   location: MESH_INTERNAL
+#   resolution: DNS
+#   endpoints:
+#     - address: httpbin-v1.httpbin.svc.cluster.local
+#       ports:
+#         http: 80
+#   exportTo:
+#     - '*'
+# ---          
