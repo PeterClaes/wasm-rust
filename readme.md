@@ -1,17 +1,22 @@
-Windows WSL
+# WASM Rust
 
-install rust & wasm : https://antweiss.com/blog/extending-envoy-with-wasm-and-rust/
+## Windows WSL
 
-examples : https://github.com/proxy-wasm/proxy-wasm-rust-sdk/tree/master/examples
+- install rust & wasm : https://antweiss.com/blog/extending-envoy-with-wasm-and-rust/
 
+- examples : https://github.com/proxy-wasm/proxy-wasm-rust-sdk/tree/master/examples
 
-cargo new --lib pekerustallround1
+## Set up wasm filter
 
-cd pekerustallround1
-code .
+`cargo new --lib pekerustallround1`
 
-change Cargo.toml :
+`cd pekerustallround1`
 
+`code .`  (Visual Studio Code)
+
+change **Cargo.toml**
+
+```
 [lib]
 crate-type = ["cdylib"]
 path = "src/lib.rs"
@@ -21,25 +26,30 @@ proxy-wasm = "0.1.3"
 log = "0.4.8"
 serde_json = "1.0"
 
-change src/lib.rs
+```
+
+change **src/lib.rs** to implement your code
 
 
-LOCAL Testing (vs Istio envoy proxy)
+## LOCAL Testing (vs Istio envoy proxy)
 
-compile to wasm : cargo build --target wasm32-unknown-unknown --release
+- compile to wasm : `cargo build --target wasm32-unknown-unknown --release`
 
-docker-compose up
+- `docker-compose up`
 
-curl -v -H "info: my little secret" http://localhost:8080/anything
+    - `curl -v -H "info: my little secret" http://localhost:8080/anything`
 
-- "secret" will be replaced with "open" in response, transponder configurations will be shown
-- json from config is parsed and value of "extraUrlsToMask" is shown in header info "Peke-Extra-Url-Mask" response
-- json config parsing is also used to get intermediate svc definition
-- call to intermediate service is done and value of result is upstreamed in header "Peke-First-Byte-Check"
+    - "secret" will be replaced with "open" in response, transponder configurations will be shown
 
-docker-compose down
+    - json from config is parsed and value of "extraUrlsToMask" is shown in header info "Peke-Extra-Url-Mask" response
 
-ISTIO Testing
+    - json config parsing is also used to get intermediate svc definition
+
+    - call to intermediate service is done and value of result is upstreamed in header "Peke-First-Byte-Check"
+
+- `docker-compose down`
+
+## ISTIO Testing
 
 - install httpbin : `kubectl apply -f httpbin.yaml`
 - install peke-echo : `kubectl apply -f peke-echo.yaml`
