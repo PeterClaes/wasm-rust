@@ -1,6 +1,6 @@
 # WASM Rust
 
-## Windows WSL
+- Windows WSL used
 
 - install rust & wasm : https://antweiss.com/blog/extending-envoy-with-wasm-and-rust/
 
